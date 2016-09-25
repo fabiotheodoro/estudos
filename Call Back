@@ -1,0 +1,101 @@
+<html>
+<head>
+<title>Click2Call</title>
+</head>
+<body>
+<?php
+#Based on the Click-To-Call script by VoipJots.com
+#Modified by Fabio Theodoro for http://www.ipcom.com.br
+#------------------------------------------------------------------------------------------
+#Editar as configurações a baixo que refletem o seu sistema.  
+#------------------------------------------------------------------------------------------
+#Especificar o endereço IP do seu Asterisk
+#Se esse código estiver hospedado no seu Asterisk, você pode usar:
+#127.0.0.1 como o host IP.  Caso Contrário, você terá que editar a linha a baixo
+#Linha no manager.conf, abaixo do usuário Admin:
+#permit=127.0.0.1/255.255.255.0
+#change to:
+#permit=127.0.0.1/255.255.255.0,xxx.xxx.xxx.xxx ;(the ip address of the server this page is running on)
+$strHost = "127.0.0.1";
+#Especificar o usuário que você vai logar (os usuários estão definidos em /etc/asterisk/manager.conf)
+$strUser = "admin";
+#Especifique o password
+$strSecret = "iPcOm_2016";
+#Especifique o canal (extension) que você quer receber as ligações
+#e.g. SIP/XXX, IAX2/XXXX, ZAP/XXXX, local/1NXXNXXXXXX@default, etc
+#$strChannel = "local/1NXXNXXXXXX@defalut";Use par seu celular;
+$strChannel = "local/click2call@default";
+#Especifique o contexto das ligações de saída.  
+$strContext = "default";
+#Especifique a quantidade sem segundos até o canal atender
+$strWaitTime = "30";
+#Especifique a prioridade da ligação
+$strPriority = "1";
+#Especifique o numero máximo de tentativas
+$strMaxRetry = "3";
+#--------------------------------------------------------------------------------------------
+#A baixo dessa linha, mude apenas o código HTML para personalização
+#--------------------------------------------------------------------------------------------
+#get the phone number from the posted form
+$strName  = $_POST['txtname'];
+$strExten = $_POST['txtphonenumber'];
+$callNumber = $strExten;
+#specify the caller id for the call
+$strCallerId = "Web-".$strName . " <$callNumber>";
+$length = strlen($strExten);
+if ($length == 10 && is_numeric($strExten))
+{
+$oSocket = fsockopen($strHost, 5038, $errnum, $errdesc) or die("Connection to host failed");
+fputs($oSocket, "Action: login\r\n");
+fputs($oSocket, "Events: off\r\n");
+fputs($oSocket, "Username: $strUser\r\n");
+fputs($oSocket, "Secret: $strSecret\r\n\r\n");
+fputs($oSocket, "Action: originate\r\n");
+fputs($oSocket, "Channel: $strChannel\r\n");
+fputs($oSocket, "WaitTime: $strWaitTime\r\n");
+fputs($oSocket, "CallerId: $strCallerId\r\n");
+fputs($oSocket, "Exten: $strExten\r\n");
+fputs($oSocket, "Context: $strContext\r\n");
+fputs($oSocket, "Priority: 1\r\n\r\n");
+fputs($oSocket, "Action: Logoff\r\n\r\n");
+sleep(3);
+fclose($oSocket);
+?>
+<p>
+<table width="300" border="1" bordercolor="#0f0f0f" cellpadding="3" cellspacing="0">
+        <tr><td>
+        <font size="2" face="verdana,georgia" color="#000000">Estamos processando sua ligação, por favor, espere dois minutos.
+Se você não receber uma ligação dentro de dois minutos, verifique se digitou seu nome e numero corretamente e
+<a href="javascript:history.go(-1)">tente novamente.</a>
+</font>
+        </td></tr>
+</table>
+<p><h3><a href="javascript:history.go(-1)">Voltar</a></h3>
+</p>
+
+
+<?
+}
+else
+{
+?>
+<p>
+<table width="300" border="1" bordercolor="#0f0f0f" cellpadding="3" cellspacing="0">
+        <tr><td>
+        <font size="2" face="verdana,arial,georgia" 
+color="#000000">Digite seu nome e seu numero contendo 10 digitos(ex.: 4530355585). Se for correto, nós ligaremos nos próximos dois minutos.</font>
+        <form action="<? echo $_SERVER['PHP_SELF'] ?>" method="post">
+
+Nome:&nbsp;&nbsp;&nbsp; <input type="text" size="30" maxlength="12" name="txtname"><br><br>
+Numero: <input type="text" size="30" maxlength="10" name="txtphonenumber"><br><br>
+<center><input type="submit" 
+value="Me ligue agora"></center>
+        </form>
+        </td></tr>
+</table>
+</p>
+<?
+}
+?>
+</body>
+</html>
